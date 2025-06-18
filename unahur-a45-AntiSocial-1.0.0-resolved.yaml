@@ -1,0 +1,278 @@
+openapi: 3.0.0
+info:
+  title: API Prototipo Red Social
+  description: "Documentación de la API para la gestión de usuarios, etiquetas y publicaciones."
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/unahur-a45/AntiSocial/1.0.0
+  description: SwaggerHub API Auto Mocking
+- url: http://localhost:3001
+  description: Servidor local
+paths:
+  /usuarios:
+    get:
+      tags:
+      - Usuarios
+      summary: Obtener todos los usuarios
+      description: Devuelve una lista de todos los usuarios registrados.
+      operationId: getUsers
+      responses:
+        "200":
+          description: Lista de usuarios obtenida correctamente.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Usuario'
+        "500":
+          description: Error al obtener los usuarios.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_500'
+    post:
+      tags:
+      - Usuarios
+      summary: Crear un nuevo usuario
+      description: Registra un nuevo usuario en el sistema.
+      operationId: createUser
+      requestBody:
+        description: Datos del usuario a crear.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Usuario'
+        required: true
+      responses:
+        "201":
+          description: Usuario creado correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        "400":
+          description: Error al crear el usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_400'
+  /usuarios/{id}:
+    get:
+      tags:
+      - Usuarios
+      summary: Obtener un usuario por ID
+      description: Devuelve los datos de un usuario específico según su ID.
+      operationId: getUserById
+      parameters:
+      - name: id
+        in: path
+        description: ID del usuario a buscar.
+        required: true
+        schema:
+          type: integer
+          example: 1
+      responses:
+        "200":
+          description: Usuario obtenido correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        "404":
+          description: Usuario no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_404'
+  /tags:
+    get:
+      tags:
+      - Etiquetas
+      summary: Obtener todas las etiquetas
+      description: Devuelve una lista de todas las etiquetas disponibles.
+      operationId: getAllTags
+      responses:
+        "200":
+          description: Lista de etiquetas obtenida correctamente.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        "500":
+          description: Error al obtener las etiquetas.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_500_1'
+    post:
+      tags:
+      - Etiquetas
+      summary: Crear una nueva etiqueta
+      description: Registra una nueva etiqueta en el sistema.
+      operationId: createTag
+      requestBody:
+        description: Datos de la etiqueta a crear.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tag'
+        required: true
+      responses:
+        "201":
+          description: Etiqueta creada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        "500":
+          description: Error al crear la etiqueta.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_500_2'
+  /posts:
+    get:
+      tags:
+      - Publicaciones
+      summary: Obtener todas las publicaciones
+      description: Devuelve una lista de todas las publicaciones.
+      operationId: getAllPosts
+      responses:
+        "200":
+          description: Lista de publicaciones obtenida correctamente.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+        "500":
+          description: Error al obtener las publicaciones.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_500_3'
+    post:
+      tags:
+      - Publicaciones
+      summary: Crear una nueva publicación
+      description: Registra una nueva publicación en el sistema.
+      operationId: createPost
+      requestBody:
+        description: Datos de la publicación a crear.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+        required: true
+      responses:
+        "201":
+          description: Publicación creada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        "500":
+          description: Error al crear la publicación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_500_4'
+components:
+  schemas:
+    Usuario:
+      title: Users
+      required:
+      - Password
+      - email
+      - id
+      - nombre
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: Juan Pérez
+        email:
+          type: string
+          format: email
+          example: juan.perez@ejemplo.com
+        Password:
+          type: string
+          x-stoplight:
+            id: 0bnzwwqcz09eh
+    Tag:
+      title: Tags
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Tecnología
+    Post:
+      required:
+      - description
+      - id
+      - userId
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        description:
+          type: string
+          example: Mi primer post
+        userId:
+          type: integer
+          example: 1
+    inline_response_500:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error fetching users
+    inline_response_400:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error creating user
+    inline_response_404:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Usuario no encontrado
+    inline_response_500_1:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error al obtener las etiquetas
+    inline_response_500_2:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error al crear la etiqueta
+    inline_response_500_3:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error al obtener los posts
+    inline_response_500_4:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error al crear el post

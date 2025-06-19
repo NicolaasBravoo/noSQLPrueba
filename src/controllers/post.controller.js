@@ -4,55 +4,74 @@ const Comment = require('../db/models/comment');
 const Tag = require('../db/models/tag');
 const cache = require('../../utils/cache');
 const mongoose = require('mongoose');
-const User = require('../db/models/user');
 
-// Obtener todos los posts
+// Obtener todos los posts con IDs de comentarios y tags asociados
 const getPosts = async (req, res) => {
   try {
-    const posts = await Post.find({});
-    res.status(200).json(posts);
+    const posts = await Post.find().select('-__v');
+
+    const postsWithRelations = await Promise.all(
+      posts.map(async (post) => {
+        const commentIds = await Comment.find({ post: post._id }).select('_id');
+        const tagIds = await Tag.find({ posts: post._id }).select('_id');
+        const imageIds = await PostImage.find({ post: post._id }).select('_id');
+
+        return {
+          ...post.toJSON(),
+          comments: commentIds.map(c => c._id),
+          tags: tagIds.map(t => t._id),
+          images: imageIds.map(i => i._id)
+        };
+      })
+    );
+
+    res.status(200).json(postsWithRelations);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener los posts' });
   }
 };
 
-// Obtener post por ID con populates (comments, images, tags)
 const getPostById = async (req, res) => {
-  const postid = req.params.id;
+  const postId = req.params.id;
 
-  // Validar ObjectId
-  if (!mongoose.Types.ObjectId.isValid(postid)) {
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
     return res.status(400).json({ message: 'ID inválido' });
   }
 
-  // Revisar cache
-  const cachedPost = cache.get(`post_${postid}`);
+  const cachedPost = cache.get(`post_${postId}`);
   if (cachedPost) {
     console.log('📦 Devolviendo post desde cache');
     return res.status(200).json(cachedPost);
   }
 
   try {
-    const post = await Post.findById(postid)
-      .populate('comments')
-      .populate('images')
-      .populate('tags');
-
+    const post = await Post.findById(postId).select('-__v');
     if (!post) {
       return res.status(404).json({ message: 'Post no encontrado' });
     }
 
-    cache.set(`post_${postid}`, post);
+    const commentIds = await Comment.find({ post: postId }).select('_id');
+    const tagIds = await Tag.find({ posts: postId }).select('_id');
+    const imageIds = await PostImage.find({ post: postId }).select('_id');
 
-    console.log('🛠️ Post obtenido desde la base de datos');
-    res.status(200).json(post);
+    const postWithRelations = {
+      ...post.toJSON(),
+      comments: commentIds.map(c => c._id),
+      tags: tagIds.map(t => t._id),
+      images: imageIds.map(i => i._id)
+    };
+
+    cache.set(`post_${postId}`, postWithRelations);
+    console.log('🛠️ Post obtenido desde la base de datos con relaciones');
+
+    res.status(200).json(postWithRelations);
   } catch (error) {
-    res.status(400).json({ message: 'Error al obtener el post' });
+    res.status(500).json({ message: 'Error al obtener el post' });
   }
 };
 
-// Crear nuevo post y subir imágenes asociadas
 
+// Crear nuevo post y subir imágenes asociadas
 const createPost = async (req, res) => {
   try {
     const { description, user } = req.body;
@@ -61,11 +80,9 @@ const createPost = async (req, res) => {
       return res.status(400).json({ error: 'Faltan campos obligatorios: description o user' });
     }
 
-    // Crear post
     const newPost = new Post({ description, user });
     await newPost.save();
 
-    // Manejar imágenes si existen
     if (req.files && req.files.length > 0) {
       const imagesToCreate = req.files.map(file => ({
         post: newPost._id,
@@ -73,18 +90,9 @@ const createPost = async (req, res) => {
       }));
 
       const savedImages = await PostImage.insertMany(imagesToCreate);
-
-      // Actualizar el post con las imágenes creadas
       newPost.images = savedImages.map(img => img._id);
       await newPost.save();
     }
-
-    // Agregar el post al array de posts del usuario ACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    await User.findByIdAndUpdate(
-      user,
-      { $push: { posts: newPost._id } },
-      { new: true }
-    );
 
     res.status(201).json(newPost);
   } catch (err) {
@@ -108,7 +116,6 @@ const deletePost = async (req, res) => {
     }
 
     cache.del(`post_${id}`);
-
     res.status(200).json({ message: `El posteo con ID ${removed._id} se ha borrado correctamente` });
   } catch {
     res.status(500).json({ message: 'Error al borrar el post' });
@@ -130,84 +137,9 @@ const updatePost = async (req, res) => {
     }
 
     cache.del(`post_${id}`);
-
     res.status(200).json(post);
   } catch (error) {
     res.status(500).json({ error: 'Error al actualizar el post' });
-  }
-};
-
-// Obtener comentarios asociados a un post
-const getCommentsByPost = async (req, res) => {
-  const postId = req.params.id;
-
-  if (!mongoose.Types.ObjectId.isValid(postId)) {
-    return res.status(400).json({ message: 'ID inválido' });
-  }
-
-  try {
-    const comments = await Comment.find({ post: postId });
-    res.status(200).json(comments);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener los comentarios del post' });
-  }
-};
-
-// Asignar tags a un post (tags ya existentes)
-const addTagsToPost = async (req, res) => {
-  try {
-    const postId = req.params.id;
-    const { tagIds } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(postId)) {
-      return res.status(400).json({ message: 'ID de post inválido' });
-    }
-
-    // Validar ids de tags
-    for (const tagId of tagIds) {
-      if (!mongoose.Types.ObjectId.isValid(tagId)) {
-        return res.status(400).json({ message: `ID de tag inválido: ${tagId}` });
-      }
-    }
-
-    const post = await Post.findById(postId);
-    if (!post) return res.status(404).json({ message: 'Post no encontrado' });
-
-    // Verificar que los tags existan
-    const tags = await Tag.find({ _id: { $in: tagIds } });
-    if (tags.length !== tagIds.length) {
-      return res.status(400).json({ message: 'Uno o más tags no existen' });
-    }
-
-    // Agregar tags (sin duplicados)
-    post.tags = [...new Set([...post.tags.map(t => t.toString()), ...tagIds])];
-    await post.save();
-
-    res.status(200).json({ message: 'Tags asignados correctamente al post' });
-  } catch (err) {
-    res.status(500).json({ error: 'Error al asignar los tags al post' });
-  }
-};
-
-// Obtener tags asociados a un post
-const getTagsByPost = async (req, res) => {
-  const postId = req.params.id;
-
-  if (!mongoose.Types.ObjectId.isValid(postId)) {
-    return res.status(400).json({ message: 'ID inválido' });
-  }
-
-  try {
-    const post = await Post.findById(postId).populate('tags');
-
-    if (!post) {
-      return res.status(404).json({ message: 'Post no encontrado' });
-    }
-
-    res.status(200).json(post.tags);
-  } catch (error) {
-    console.error("Error al obtener los tags:", error);
-    res.status(500).json({ error: 'Error al obtener los tags del post' });
   }
 };
 
@@ -216,8 +148,5 @@ module.exports = {
   createPost,
   getPostById,
   deletePost,
-  updatePost,
-  getCommentsByPost,
-  addTagsToPost,
-  getTagsByPost
+  updatePost
 };

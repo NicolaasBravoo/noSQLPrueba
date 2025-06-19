@@ -8,5 +8,9 @@ router.get("/:id", userMiddleware.validObjectId, userMiddleware.existsUser, user
 router.post("/", userController.createUser);
 router.delete("/:id", userMiddleware.validObjectId, userMiddleware.existsUser, userController.deleteUser);
 router.put("/:id", userMiddleware.validObjectId, userMiddleware.existsUser, userController.updateUser);
+router.put("/:id/follow", userController.followUser);
+router.put("/:id/unfollow", userController.unfollowUser);
+
+
 
 module.exports = router;

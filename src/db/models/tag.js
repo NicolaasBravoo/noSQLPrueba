@@ -7,12 +7,21 @@ const tagSchema = new Schema({
     required: true,
     trim: true
   },
+
   posts: [{
     type: Schema.Types.ObjectId,
     ref: 'post'
   }]
 }, {
   timestamps: false
+});
+
+// 🧼 Limpia el campo __v de la respuesta
+tagSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  }
 });
 
 module.exports = mongoose.model('tag', tagSchema);

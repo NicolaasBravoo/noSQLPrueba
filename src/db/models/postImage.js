@@ -16,5 +16,13 @@ const postImageSchema = new Schema({
   timestamps: false, // Mantenemos la lógica del modelo original
 });
 
+// 🧼 Limpia el campo __v de la respuesta
+postImageSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  }
+});
+
 // Usamos mongoose.models para evitar redefinir el modelo
 module.exports = mongoose.models.postImage || mongoose.model('postImage', postImageSchema);

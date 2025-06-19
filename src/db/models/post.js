@@ -36,4 +36,12 @@ const postSchema = new Schema({
   timestamps: true // Registra createdAt y updatedAt automáticamente
 });
 
+// 🧼 Limpia el campo __v de la respuesta
+postSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  }
+});
+
 module.exports = mongoose.model('post', postSchema);

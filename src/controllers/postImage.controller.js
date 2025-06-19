@@ -23,11 +23,18 @@ const getPostImageById = async (req, res) => {
     if (!image) {
       return res.status(404).json({ message: 'Imagen no encontrada' });
     }
-    res.status(200).json(image);
+
+    const formattedImage = {
+      ...image.toJSON(),
+      post: image.post.toString() // ⚠️ aseguramos que sea string
+    };
+
+    res.status(200).json(formattedImage);
   } catch {
     res.status(500).json({ message: 'Error al obtener la imagen solicitada' });
   }
 };
+
 
 const createPostImage = async (req, res) => {
   try {

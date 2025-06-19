@@ -18,17 +18,6 @@ const userSchema = new Schema({
     required: true
   },
 
-  // Relación con Post
-  posts: [{
-    type: Schema.Types.ObjectId,
-    ref: 'post'
-  }],
-
-  // Relación con Comment
-  comments: [{
-    type: Schema.Types.ObjectId,
-    ref: 'comment'
-  }],
 
   // Seguidores (quienes lo siguen)
   followers: [{
@@ -43,6 +32,14 @@ const userSchema = new Schema({
   }]
 }, {
   timestamps: false
+});
+
+// 🧼 Limpia el campo __v de la respuesta
+userSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  }
 });
 
 

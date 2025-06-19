@@ -9,7 +9,7 @@ const postImageSchema = new Schema({
   },
   post: {
     type: Schema.Types.ObjectId,
-    ref: 'Post',
+    ref: 'post',
     required: true,
   },
 }, {

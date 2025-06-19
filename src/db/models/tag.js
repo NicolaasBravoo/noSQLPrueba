@@ -9,7 +9,7 @@ const tagSchema = new Schema({
   },
   posts: [{
     type: Schema.Types.ObjectId,
-    ref: 'Post'
+    ref: 'post'
   }]
 }, {
   timestamps: false

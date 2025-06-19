@@ -10,12 +10,12 @@ const commentSchema = new Schema({
   post: {
     type: Schema.Types.ObjectId,
     required: true,
-    ref: 'Post'
+    ref: 'post'
   },
   user: {
     type: Schema.Types.ObjectId,
     required: true,
-    ref: 'User'
+    ref: 'user'
   }
 }, {
   timestamps: true //  Esta es la forma correcta

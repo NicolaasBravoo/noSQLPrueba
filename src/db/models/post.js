@@ -11,26 +11,26 @@ const postSchema = new Schema({
   // Autor del post (relación con User)
   user: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true
   },
 
   // Relación con imágenes
   images: [{
     type: Schema.Types.ObjectId,
-    ref: 'PostImage'
+    ref: 'postImage'
   }],
 
   // Relación con comentarios
   comments: [{
     type: Schema.Types.ObjectId,
-    ref: 'Comment'
+    ref: 'comment'
   }],
 
   // Relación muchos a muchos con tags
   tags: [{
     type: Schema.Types.ObjectId,
-    ref: 'Tag'
+    ref: 'tag'
   }]
 }, {
   timestamps: true // Registra createdAt y updatedAt automáticamente

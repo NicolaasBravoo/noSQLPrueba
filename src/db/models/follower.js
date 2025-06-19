@@ -4,12 +4,12 @@ const { Schema } = mongoose;
 const followerSchema = new Schema({
   follower: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true
   },
   followed: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true
   }
 }, {

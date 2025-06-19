@@ -21,25 +21,25 @@ const userSchema = new Schema({
   // Relación con Post
   posts: [{
     type: Schema.Types.ObjectId,
-    ref: 'Post'
+    ref: 'post'
   }],
 
   // Relación con Comment
   comments: [{
     type: Schema.Types.ObjectId,
-    ref: 'Comment'
+    ref: 'comment'
   }],
 
   // Seguidores (quienes lo siguen)
   followers: [{
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'user'
   }],
 
   // A quiénes sigue
   following: [{
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'user'
   }]
 }, {
   timestamps: false

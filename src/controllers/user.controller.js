@@ -7,7 +7,7 @@ const getUsers = async (req, res) => {
     const users = await User.find()
       .populate('followers')   // followers que te siguen (ojo que depende cómo definiste el esquema)
       .populate('following')  // usuarios a los que sigue
-      .populate('posts');
+      ;
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ error: 'Ocurrió un error al obtener usuarios' });
@@ -23,11 +23,7 @@ const getUserById = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ _id })
-      .populate('followers')
-      .populate('following')
-      .populate('posts')
-      .populate('comments');
+    const user = await User.findOne({ _id });
 
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });

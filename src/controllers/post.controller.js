@@ -4,6 +4,7 @@ const Comment = require('../db/models/comment');
 const Tag = require('../db/models/tag');
 const cache = require('../../utils/cache');
 const mongoose = require('mongoose');
+const User = require('../db/models/user');
 
 // Obtener todos los posts
 const getPosts = async (req, res) => {
@@ -51,22 +52,43 @@ const getPostById = async (req, res) => {
 };
 
 // Crear nuevo post y subir imágenes asociadas
+
 const createPost = async (req, res) => {
   try {
-    const newPost = new Post(req.body);
+    const { description, user } = req.body;
+
+    if (!description || !user) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios: description o user' });
+    }
+
+    // Crear post
+    const newPost = new Post({ description, user });
     await newPost.save();
 
+    // Manejar imágenes si existen
     if (req.files && req.files.length > 0) {
       const imagesToCreate = req.files.map(file => ({
         post: newPost._id,
         url: `/images/${file.filename}`
       }));
 
-      await PostImage.insertMany(imagesToCreate);
+      const savedImages = await PostImage.insertMany(imagesToCreate);
+
+      // Actualizar el post con las imágenes creadas
+      newPost.images = savedImages.map(img => img._id);
+      await newPost.save();
     }
+
+    // Agregar el post al array de posts del usuario ACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    await User.findByIdAndUpdate(
+      user,
+      { $push: { posts: newPost._id } },
+      { new: true }
+    );
 
     res.status(201).json(newPost);
   } catch (err) {
+    console.error('Error al crear post:', err);
     res.status(500).json({ error: 'Error al crear el post' });
   }
 };
